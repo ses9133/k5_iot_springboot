@@ -47,6 +47,10 @@ dependencies {
 	// === 테스트 의존성 === //
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Spring Web Validation 스타터
+	// - 데이터 유효성 검사를 위한 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {
