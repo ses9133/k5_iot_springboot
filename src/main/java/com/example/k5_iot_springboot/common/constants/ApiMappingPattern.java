@@ -29,8 +29,13 @@ public class ApiMappingPattern {
 
         public static final String ROOT = BASE + "/posts";
         public static final String ID_ONLY = "/{postId}";
-
         public static final String BY_ID = ROOT + "/{postId}";
+
+        public static final String BY_AUTHOR = "/author/{author}";
+
+        public static final String SEARCH_BY_TITLE = "/search";
+        public static final String TOP_BY_COMMENTS = "/top-comments";
+
     }
 
     // === 3. 댓글 (D_Comment)

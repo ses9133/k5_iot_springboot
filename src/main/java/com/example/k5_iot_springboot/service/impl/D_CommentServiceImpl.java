@@ -29,7 +29,7 @@ public class D_CommentServiceImpl implements D_CommentService {
         D_Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 id 의 게시글을 찾을 수 없습니다."));
         D_Comment comment = D_Comment.create(dto.content(), dto.commenter());
-        post.addComment(comment); // 연관관계 편으 ㅣ메서드
+        post.addComment(comment); // 연관관계 편의메서드
         D_Comment saved = commentRepository.save(comment);
 
         return ResponseDto.setSuccess("SUCCESS", CommentResponseDto.from(saved));

@@ -22,6 +22,6 @@ public record PostCreateRequestDto (
         String content,
 
         @NotBlank(message = "작성자는 필수 입력값 입니다.")
-        @Size(max = 100, message = "메시지는 최대 100자까지 입력 가능합니다.")
+        @Size(max = 10, message = "메시지는 최대 10자까지 입력 가능합니다.")
         String author
 ){}

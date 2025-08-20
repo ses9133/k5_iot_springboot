@@ -20,6 +20,7 @@ import java.util.List;
 @ToString(exclude = "comments")
 // exclude = "comments"
 // : 해당 속성값의 필드(comments)를 제외하고 ToString 메서드 내에서 필드값 출력 (comments 빼고 출력한다)
+@Builder
 public class D_Post {
     // 게시글 id, title, content, author
     // Post와 Comment 는 1:N 관계
@@ -81,7 +82,6 @@ public class D_Post {
     public void changeTitle(String title) {
         this.title =title;
     }
-
     public void changeContent(String content) {
         this.content = content;
     }
