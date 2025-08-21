@@ -88,3 +88,19 @@ CREATE TABLE IF NOT EXISTS comments (
   SELECT * FROM comments;
   
   DESC comments;
+
+-- 0821(F_Board)
+-- 게시판 테이블 (생성/수정 시간 포함)
+CREATE TABLE IF NOT EXISTS boards (
+	id BIGINT AUTO_INCREMENT,
+    title VARCHAR(150) NOT NULL COMMENT '게시판 제목',
+    content LONGTEXT NOT NULL COMMENT '게시판 내용',
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB
+DEFAULT CHARSET = utf8mb4,
+COLLATE = utf8mb4_unicode_ci
+COMMENT = '게시글';
+
+SELECT * FROM boards;
