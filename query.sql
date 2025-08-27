@@ -104,3 +104,55 @@ COLLATE = utf8mb4_unicode_ci
 COMMENT = '게시글';
 
 SELECT * FROM boards;
+
+-- 08/27 (G_User_role)
+-- 사용자 권한 테이블
+SELECT * FROM users;
+CREATE TABLE IF NOT EXISTS user_roles (
+	user_id BIGINT NOT NULL,
+    role VARCHAR(30) NOT NULL,
+    
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_user_roles UNIQUE (user_id, role),
+    CONSTRAINT chk_user_roles_role CHECK (role IN ('USER', 'MANAGER', 'ADMIN'))
+) ENGINE=InnoDB
+DEFAULT CHARSET = utf8mb4,
+COLLATE = utf8mb4_unicode_ci
+COMMENT = '사용자 권한';
+
+-- users 테이블
+CREATE TABLE IF NOT EXISTS `users` (
+	id BIGINT NOT NULL AUTO_INCREMENT,
+    login_id VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
+    gender VARCHAR(10),
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT `uk_users_login_id` UNIQUE (login_id),
+    CONSTRAINT `uk_users_email` UNIQUE (email),
+    CONSTRAINT `uk_users_nickname` UNIQUE (nickname),
+    CONSTRAINT `chk_users_gender` CHECK(gender IN ('MALE', 'FEMALE'))
+) ENGINE=InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '사용자';
+
+-- 샘플 데이터
+INSERT INTO user_roles (user_id, role) 
+VALUES 
+	(1, 'ADMIN');
+INSERT INTO user_roles (user_id, role) 
+VALUES 
+	(2, 'USER');
+    
+SELECT * FROM user_roles;
+SELECT * FROM users;
+INSERT INTO user_roles (user_id, role) 
+VALUES 
+	(4, 'ADMIN');
+
+
+ 

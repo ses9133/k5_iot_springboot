@@ -142,7 +142,7 @@ public class F_BoardServiceImpl implements F_BoardService {
         //      +) 다시 실행시 커밋된 변경사항 확인 가능
 
         // cf) save() VS flush()
-        //  1) save()
+        // 1) save()
         //  : Spring Data JPA Repository 메서드
         // - 새로운 엔티티 INSERT, 이미 존재하는 엔티티 UPDATE
         //  >> 영속 상태를 처리

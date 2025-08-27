@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class F_BoardController {
    private final F_BoardService boardService;
 
    // 1) 게시글 생성
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<ResponseDto<BoardResponseDto.DetailResponse>> createBoard(
             @Valid @RequestBody BoardRequestDto.CreateRequest request
@@ -33,6 +35,7 @@ public class F_BoardController {
     }
 
     //2) 게시글 조회 (전체조회)
+    @PreAuthorize("hasAnyRole('USER','MANAGER', 'ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<ResponseDto<List<BoardResponseDto.SummaryResponse>>> getAllBoards() {
         ResponseDto<List<BoardResponseDto.SummaryResponse>> response = boardService.getAllBoards();
@@ -40,6 +43,7 @@ public class F_BoardController {
     }
 
     // 2-1) 게시글 조회 (페이지네이션 Offset 조회)
+    @PreAuthorize("hasAnyRole('USER','MANAGER', 'ADMIN')")
     @GetMapping
     public ResponseEntity<ResponseDto<BoardResponseDto.PageResponse>> getBoardsPage(
             // page: 0부터 시작, 필요 시 1부터 시작하는 정책도 가능
@@ -54,6 +58,7 @@ public class F_BoardController {
     }
 
     // 2-2) 게시글 조회 (페이지네이션 Cursor 조회)
+    @PreAuthorize("hasAnyRole('USER','MANAGER', 'ADMIN')")
     @GetMapping("/cursor")
     public ResponseEntity<ResponseDto<BoardResponseDto.SliceResponse>> getBoardsByCursor(
             // 처음 요청이면 null (가장 최신부터 시작)
@@ -67,6 +72,7 @@ public class F_BoardController {
     }
 
     // 3) 게시글 수정
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @PutMapping(ApiMappingPattern.Boards.ID_ONLY)
     public ResponseEntity<ResponseDto<BoardResponseDto.DetailResponse>> updateBoard(
             @PathVariable Long boardId,
@@ -75,4 +81,8 @@ public class F_BoardController {
         ResponseDto<BoardResponseDto.DetailResponse> response = boardService.updateBoard(boardId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    // 4) 게시글 삭제
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @DeleteMapping
 }

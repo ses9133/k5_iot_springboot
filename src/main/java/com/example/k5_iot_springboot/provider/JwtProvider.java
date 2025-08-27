@@ -57,7 +57,7 @@ public class JwtProvider {
      * */
     // 환경변수에 지정한 비밀키와 만료 시간 저장 변수 선언
     private final SecretKey key;
-    private final int jwtExpirationMs;
+    private final long jwtExpirationMs;
     private final int clockSkewSeconds;
 
     // 검증/파싱 담당 파서: 파서를 생성자에서 1회 구성하여 재사용 - 성능/일관성 보장(JJWT의 파서 객체)
@@ -69,7 +69,7 @@ public class JwtProvider {
             // @Value: application.properties 나 application.yml과 같은 설정 파일의 값을 클래스 변수에 주입
             //          >> 데이터 타입 자동 인식
             @Value("${jwt.secret}") String secret, // cf) Base64 인코딩된 비밀키 문자열이어야함
-            @Value("${jwt.expiration}") int jwtExpirationMs,    //
+            @Value("${jwt.expiration}") long jwtExpirationMs,    //
             @Value("${jwt.clock-skew-seconds:0}")  int clockSkewSeconds  // 기본 0 - 옵션
     ) {
        // 키 강도 검증(Base64 로 디코딩후 256 비트 이상 권장)
