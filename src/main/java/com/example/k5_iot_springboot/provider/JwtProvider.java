@@ -219,7 +219,6 @@ public class JwtProvider {
             return result;
         }
 
-
         return Set.of(raw.toString());
     }
 

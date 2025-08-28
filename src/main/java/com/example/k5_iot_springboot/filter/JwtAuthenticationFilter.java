@@ -112,7 +112,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             //Set<String> roles = jwtProvider.getRolesFromJwt(token);
 
-
             // 7) 권한 문자열 - GrantedAuthority 로 매핑 ("ROLE_" 접두어 보장)
             //  : 스프링 시큐리티가 이해하는 권한 타입으로 변환
             // >> 권한명 앞에 "ROLE_" 접두사가 필요함
@@ -165,7 +164,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /** USER/ADMIN -> "ROLE_USER" / "ROLE_ADMIN" 으로 매핑*/
-    private List<GrantedAuthority> toAuthorities(Set<String> roles) {
+    public List<GrantedAuthority> toAuthorities(Set<String> roles) {
         if(roles == null || roles.isEmpty()) return List.of();
         return roles.stream()
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)

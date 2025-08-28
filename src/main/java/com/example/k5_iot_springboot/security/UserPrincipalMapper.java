@@ -1,6 +1,9 @@
 package com.example.k5_iot_springboot.security;
 
 import com.example.k5_iot_springboot.entity.G_User;
+import com.example.k5_iot_springboot.filter.JwtAuthenticationFilter;
+import com.example.k5_iot_springboot.provider.JwtProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +29,7 @@ import java.util.List;
  *   -> Authentication(Principal) 에 주입되어 보안 컨텍스트에 저장
  * */
 @Component
+@RequiredArgsConstructor
 public class UserPrincipalMapper {
 
     @NonNull
@@ -43,6 +47,10 @@ public class UserPrincipalMapper {
                             return new SimpleGrantedAuthority(role);
                         })
                         .toList();
+//                        .map( role -> {
+//                            Set<String> roles = jwtProvider.getRolesFromJwt(String.valueOf(role));
+//                            return jwtAuthenticationFilter.toAuthorities(roles);
+//                        }).toList();
 
         return UserPrincipal.builder()
                 .id(user.getId())

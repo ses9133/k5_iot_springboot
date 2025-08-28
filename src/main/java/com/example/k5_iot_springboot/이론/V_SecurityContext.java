@@ -44,7 +44,7 @@ package com.example.k5_iot_springboot.이론;
 
     10. JWT 발급(애플리케이션 레벨)
         - auth 정보(사용자 PK, username, roles 등) 로 Access Token 생성
-        - 클레밍 sub=username, roles, iat, exp
+        - 클레임: sub=username, roles, iat, exp
 
     11. 응답 작성
         - 헤더 Authorization: Bearer <토큰> 또는 바디 JSON 변환
@@ -53,9 +53,6 @@ package com.example.k5_iot_springboot.이론;
 ------------------------
     +) 이후 요청 처리(인가 단계)
         - JWT 필터가 헤더의 토큰 검증 >> 유효하면 UserPrincipal 재구성 >> SecurityContext 에 주입
-
-    필터체인
-    UsernamePasswordAuthenticationFilter -> AuthenticationManager -> DaoAuthenticationProvider
 
  */
 public class V_SecurityContext {

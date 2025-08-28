@@ -71,7 +71,6 @@ public class G_AuthServiceImpl implements G_AuthService {
                 // >> UserPrincipalMapper.map() 으로 UserPrincipal 생성
                 // >> PasswordEncoder 로 비밀번호 비교
                 // >> 인증 성공시 Authentication 반환
-                // >>>> JWT 발급
                 new UsernamePasswordAuthenticationToken(req.loginId(), req.password())
         );
 

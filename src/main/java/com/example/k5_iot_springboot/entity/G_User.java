@@ -94,4 +94,5 @@ public class G_User extends BaseTimeEntity {
     public void removeRole(RoleType role) {
         this.roles.remove(role);
     }
+
 }
