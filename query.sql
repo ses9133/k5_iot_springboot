@@ -153,6 +153,152 @@ SELECT * FROM users;
 INSERT INTO user_roles (user_id, role) 
 VALUES 
 	(4, 'ADMIN');
+    
+-- 09/01 (주문 관리 시스템)
+-- 트랜잭션, 트리거, 인데긋, 뷰 학습
+# products(상품), stocks(재고)
+#, orders(주문 정보), order_items(주문 상세 정보), order_logs(주문 기록 정보)
+
+-- 안전 실행: 삭제 순서
+# FOREIGN_KEY_CHECKS: 외래 키 제약 조건을 활성화(1) 하거나 비활성화(0) 하는 명령어
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS order_logs;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS stocks;
+DROP TABLE IF EXISTS products;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 상품 정보 테이블
+CREATE TABLE IF NOT EXISTS products (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL, 
+    price INT NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    
+    CONSTRAINT uq_products_name UNIQUE(name),
+    INDEX idx_product_name (name) -- 제품명으로 인덱스 설정 => 제품 조회 시 성능 향상
+) ENGINE=InnoDB						-- MySQL 에서 테이블이 데이터를 저장하고 관리하는 방식을 지정하는 명령어 
+  DEFAULT CHARSET = utf8mb4			-- DB 나 테이블의 기본 문자 집합 (4바이트까지 지원 - 이모지 포함)
+  COLLATE = utf8mb4_unicode_ci		-- 정렬 순서 지정 (대소문자 구분 없이 문자열 비교 정렬)
+  COMMENT = '상품 정보';
+  
+  # ENGINE=InnoDB: 트랜잭션 지원(ACID), 외래키 제약 조건 지원(참조 무결성 보장) 
+  
+  CREATE TABLE IF NOT EXISTS stocks (
+	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+     product_id BIGINT NOT NULL,
+     quantity INT NOT NULL,
+     created_at DATETIME(6) NOT NULL,
+     updated_at DATETIME(6) NOT NULL,
+     
+	CONSTRAINT fk_stocks_product
+		FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+	CONSTRAINT chk_stocks_qty CHECK (quantity >= 0), -- CHECK 제약 조건
+    INDEX idx_stocks_product_id(product_id)
+  ) ENGINE = InnoDB
+	DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci
+    COMMENT = '상품 재고 정보';
+    
+  CREATE TABLE IF NOT EXISTS orders (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY ,
+    user_id BIGINT NOT NULL,
+    order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+	created_at DATETIME(6) NOT NULL,
+	udpated_at DATETIME(6) NOT NULL,
+    
+    CONSTRAINT fk_orders_user
+		FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+	CONSTRAINT chk_orders_os CHECK (order_status IN ('PENDING', 'APPROVED', 'CANCELED')),
+	INDEX idx_orders_user (user_id),
+    INDEX idx_orders_status (order_status),
+    INDEX idx_orders_created_at (created_at)
+  ) ENGINE = InnoDB  
+	DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci
+    COMMENT = '주문 정보';
+    
+  CREATE TABLE IF NOT EXISTS order_items (
+	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+     order_id BIGINT NOT NULL, 				-- 주문 정보
+     product_id BIGINT NOT NULL,		    -- 제품 정보
+     quantity INT NOT NULL,
+	 created_at DATETIME(6) NOT NULL,
+	 udpated_at DATETIME(6) NOT NULL,
+     
+	CONSTRAINT fk_order_items_order
+		FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+	CONSTRAINT fk_order_items_product
+		FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+	CONSTRAINT chk_order_items_qty CHECK (quantity > 0),  -- 재고는 0 개가 가능하나 주문 수량은 0개가 될수 없음
+	INDEX idx_order_items_order (order_id),
+	INDEX idx_order_items_product (product_id),
+    UNIQUE KEY uq_order_product (order_id, product_id)
+  ) ENGINE = InnoDB
+	DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci
+    COMMENT = '주문 상세 정보';
+    
+  CREATE TABLE IF NOT EXISTS order_logs (
+	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+     order_id BIGINT NOT NULL,
+     message VARCHAR(255),
+     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+	 udpated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+     -- 트랜잭션이 아닌 트리거가 직접 INSERT 하는 로그 테이블은 시간 누락 방지를 위해 DB 기본값 유지
+     
+	CONSTRAINT fk_order_logs_order
+		FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+	INDEX idx_order_logs_order (order_id),
+    INDEX idx_order_logs_created_at (created_at)
+  ) ENGINE = InnoDB
+	DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci
+    COMMENT =  '주문 기록 정보';
+    
+-- 초기 데이터 설정 --
+INSERT INTO products (name, price, created_at, updated_at)
+VALUES 
+	('갤럭시 Z플립7', 50000, NOW(6), NOW(6)),
+	('아이폰 16', 60000, NOW(6), NOW(6)),
+	('갤릭서 S25 울트라', 55000, NOW(6), NOW(6)),
+	('맥북 프로 14', 80000, NOW(6), NOW(6));
+    
+INSERT INTO stocks (product_id, quantity, created_at, updated_at)
+VALUES 
+	(1, 50, NOW(6), NOW(6)),
+	(2, 30, NOW(6), NOW(6)),
+	(3, 70, NOW(6), NOW(6)),
+	(4, 20, NOW(6), NOW(6));
+    
+SELECT * FROM products;
+SELECT * FROM orders;
+SELECT * FROM stocks;
+SELECT * FROM order_items;
+SELECT * FROM order_logs;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  
