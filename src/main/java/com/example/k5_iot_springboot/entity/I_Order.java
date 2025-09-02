@@ -35,12 +35,13 @@ public class I_Order extends BaseTimeEntity {
         foreignKey = @ForeignKey(name = "fk_orders_user"))
     private G_User user;
 
+    // 자바 Enum 타입은 DB 에서 VARCHAR + CHECK 제약조건 사용
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false, length = 50)
     private OrderStatus orderStatus = OrderStatus.PENDING;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    // - mappedBy: 주인관계 지정(양방향 매핑에서 연관관계의 주인을 I_OrderItem 으로 지정)
+    // - mappedBy: 주인관계 지정(양방향 매핑에서 연관관계의 주인을 I_OrderItem 으로 지정 - FK 설정하는 엔티티 지정)
     //  >> "order"는 I_OrderItem 의 order 필드명을 가리킴
     // orphanRemoval=true -> items 리스트에서 요소 제거시, 해당 요소의 DB 에서 OrderItem 레코드가 삭제됨
 //    @Builder.Default

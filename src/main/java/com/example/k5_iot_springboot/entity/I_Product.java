@@ -5,10 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(
@@ -34,6 +31,14 @@ public class I_Product extends BaseTimeEntity {
     private I_Product(String name, int price) {
         this.name =name;
         this.price =price;
+    }
+
+    public void setName(String name) {
+        this.name =name;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
     }
 
 }

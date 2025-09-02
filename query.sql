@@ -148,6 +148,10 @@ INSERT INTO user_roles (user_id, role)
 VALUES 
 	(2, 'USER');
     
+INSERT INTO user_roles (user_id, role) 
+VALUES 
+	(6, 'ADMIN');
+    
 SELECT * FROM user_roles;
 SELECT * FROM users;
 INSERT INTO user_roles (user_id, role) 
@@ -186,6 +190,7 @@ CREATE TABLE IF NOT EXISTS products (
   
   # ENGINE=InnoDB: 트랜잭션 지원(ACID), 외래키 제약 조건 지원(참조 무결성 보장) 
   
+-- 재고 정보 테이블
   CREATE TABLE IF NOT EXISTS stocks (
 	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
      product_id BIGINT NOT NULL,
@@ -202,12 +207,13 @@ CREATE TABLE IF NOT EXISTS products (
     COLLATE = utf8mb4_unicode_ci
     COMMENT = '상품 재고 정보';
     
+-- 주문 정보 테이블
   CREATE TABLE IF NOT EXISTS orders (
 	id BIGINT AUTO_INCREMENT PRIMARY KEY ,
     user_id BIGINT NOT NULL,
     order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
 	created_at DATETIME(6) NOT NULL,
-	udpated_at DATETIME(6) NOT NULL,
+	updated_at DATETIME(6) NOT NULL,
     
     CONSTRAINT fk_orders_user
 		FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -220,13 +226,14 @@ CREATE TABLE IF NOT EXISTS products (
     COLLATE = utf8mb4_unicode_ci
     COMMENT = '주문 정보';
     
+-- 주문 상세정보 테이블
   CREATE TABLE IF NOT EXISTS order_items (
 	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
      order_id BIGINT NOT NULL, 				-- 주문 정보
      product_id BIGINT NOT NULL,		    -- 제품 정보
      quantity INT NOT NULL,
 	 created_at DATETIME(6) NOT NULL,
-	 udpated_at DATETIME(6) NOT NULL,
+	 updated_at DATETIME(6) NOT NULL,
      
 	CONSTRAINT fk_order_items_order
 		FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
@@ -241,12 +248,13 @@ CREATE TABLE IF NOT EXISTS products (
     COLLATE = utf8mb4_unicode_ci
     COMMENT = '주문 상세 정보';
     
+-- 주문 내역 테이블
   CREATE TABLE IF NOT EXISTS order_logs (
 	 id BIGINT AUTO_INCREMENT PRIMARY KEY,
      order_id BIGINT NOT NULL,
      message VARCHAR(255),
      created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-	 udpated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+	 updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
      -- 트랜잭션이 아닌 트리거가 직접 INSERT 하는 로그 테이블은 시간 누락 방지를 위해 DB 기본값 유지
      
 	CONSTRAINT fk_order_logs_order
@@ -273,6 +281,70 @@ VALUES
 	(3, 70, NOW(6), NOW(6)),
 	(4, 20, NOW(6), NOW(6));
     
+-- 0902
+-- 뷰 (행 단위): 주문 상세 화면(API) - 한 주문의 각 상품 라인 아이템 정보를 상세하게 제공할 때 
+-- : ex) GET /api/v1/orders/{orderId}/items
+CREATE OR REPLACE VIEW order_summary AS
+SELECT
+	o.id					AS order_id,
+    o.user_id				AS user_id,
+    o.order_status 			AS order_status,
+    p.name					AS product_name,
+    oi.quantity				AS quantity,
+    p.price					AS price,
+    CAST((oi.quantity * p.price) AS SIGNED) AS total_price,
+    o.created_at			AS ordered_at
+FROM
+	orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id;
+        
+DROP VIEW order_summary;
+
+-- 뷰 (주문 합계)
+CREATE OR REPLACE VIEW order_totals AS
+SELECT
+	o.id						AS order_id,
+    o.user_id					AS user_id,
+    o.order_status				AS order_status,
+    CAST(SUM(oi.quantity * p.price)	AS SIGNED) AS order_total_amount,
+    CAST(SUM(oi.quantity) AS SIGNED)			AS order_total_qty,
+    MIN(o.created_at)			AS ordered_at
+FROM
+    orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id
+GROUP BY 
+	o.id, o.user_id, o.order_status; -- 주문 별! 합계: 주문(orders) 정보를 기준으로 그룹화!
+    
+DROP VIEW order_totals; -- REPLACE 명령어로 DROP 안써도 됨
+    
+-- 트리거: 주문 생성시 로그
+# 고객 문의/장애 분석시 "언제 주문 레코드가 생겼는지" 원인 추적에 사용
+DELIMITER // 
+CREATE TRIGGER trg_after_order_insert
+	AFTER INSERT ON orders
+	FOR EACH ROW
+    BEGIN
+		INSERT INTO order_logs(order_id, message)
+		VALUES (NEW.id, CONCAT('주문이 생성되었습니다. 주문 ID: ', NEW.id));
+END //
+DELIMITER ;
+
+-- 트리거: 주문 상태 변경시 로그
+# 상태 전이 추적시 "누가 언제 어떤 상태로 바꿨는지" 원인 추적에 사용
+DELIMITER // 
+CREATE TRIGGER trg_after_order_status_update
+	AFTER UPDATE ON orders
+	FOR EACH ROW
+    BEGIN
+		IF NEW.order_status <> OLD.order_status THEN -- A <> B는 A != B 를 의미
+			INSERT INTO order_logs(order_id, message)
+			VALUES (NEW.id, CONCAT('주문 상태가 ', OLD.order_status, ' -> ', NEW.order_status, '로 변경되었습니다.'));
+		END IF;
+END //
+DELIMITER ;order_summary
+
 SELECT * FROM products;
 SELECT * FROM orders;
 SELECT * FROM stocks;

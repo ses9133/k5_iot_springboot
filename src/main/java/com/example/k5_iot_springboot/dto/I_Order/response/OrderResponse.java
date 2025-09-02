@@ -1,0 +1,26 @@
+package com.example.k5_iot_springboot.dto.I_Order.response;
+
+import com.example.k5_iot_springboot.common.enums.OrderStatus;
+import java.util.List;
+
+public class OrderResponse {
+    /** 주문 상세 응답 DTO */
+    public record Detail(
+            Long orderId,
+            Long userId,
+            OrderStatus status,
+            Integer total_amount,
+            Integer total_quantity,
+            String createdAt,
+            List<OrderItemList> items
+    ) {}
+
+    /** 주문 항목 리스트 응답 DTO */
+    public record OrderItemList (
+            Long productId,
+            String productName,
+            Integer price,
+            Integer quantity,
+            Integer lineTotal   // 주문 항목이 총 몇개인지
+    ) {}
+}

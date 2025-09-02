@@ -2,7 +2,6 @@ package com.example.k5_iot_springboot.entity;
 
 import com.example.k5_iot_springboot.entity.base.BaseTimeEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
