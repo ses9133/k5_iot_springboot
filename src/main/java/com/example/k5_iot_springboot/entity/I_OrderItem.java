@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -48,4 +49,11 @@ public class I_OrderItem extends BaseTimeEntity {
          this.order = order;
      }
 
+     @Builder
+    private I_OrderItem(Long id, I_Order order, I_Product product, int quantity) {
+        this.id = id;
+        this.order = order;
+        this.product = product;
+        this.quantity = quantity;
+    }
 }

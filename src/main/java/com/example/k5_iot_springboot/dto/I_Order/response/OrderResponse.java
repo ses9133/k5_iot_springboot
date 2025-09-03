@@ -1,6 +1,7 @@
 package com.example.k5_iot_springboot.dto.I_Order.response;
 
 import com.example.k5_iot_springboot.common.enums.OrderStatus;
+
 import java.util.List;
 
 public class OrderResponse {
@@ -21,6 +22,8 @@ public class OrderResponse {
             String productName,
             Integer price,
             Integer quantity,
-            Integer lineTotal   // 주문 항목이 총 몇개인지
+            Integer lineTotal   // 가격 * 수량 (한 제품의 총가격)
     ) {}
+
+
 }

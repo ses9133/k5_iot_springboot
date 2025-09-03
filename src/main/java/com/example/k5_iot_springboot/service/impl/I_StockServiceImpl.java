@@ -61,7 +61,7 @@ public class I_StockServiceImpl implements I_StockService {
 
        data = new StockResponse.Response(stock.getProduct().getId(), stock.getQuantity());
 
-        return ResponseDto.setSuccess("재고가 성공적으로 설정되었습니다.", data);
+       return ResponseDto.setSuccess("재고가 성공적으로 설정되었습니다.", data);
     }
 
     @Override

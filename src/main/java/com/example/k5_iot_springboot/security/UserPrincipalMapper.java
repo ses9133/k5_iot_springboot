@@ -1,8 +1,6 @@
 package com.example.k5_iot_springboot.security;
 
 import com.example.k5_iot_springboot.entity.G_User;
-import com.example.k5_iot_springboot.filter.JwtAuthenticationFilter;
-import com.example.k5_iot_springboot.provider.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
