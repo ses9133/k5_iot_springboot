@@ -20,7 +20,7 @@ public class DateUtils {
 
     // DB(DATETIME, UTC) >> "yyyy-MM-dd HH:mm:ss"(KST) 문자열로 바꾸기
     public static String toKstString(LocalDateTime utcLocalDateTime) {
-        if(utcLocalDateTime == null) return null;
+        if (utcLocalDateTime == null) return null;
         ZonedDateTime zdtUtc = utcLocalDateTime.atZone(ZoneId.of("UTC"));
         ZonedDateTime zdtKst = zdtUtc.withZoneSameInstant(ZONE_KST);
         return zdtKst.format(KST_FORMATTER);
@@ -29,7 +29,7 @@ public class DateUtils {
     // DB -> ISO-8601 문자열 반환
     // : 프론트에서 타임존이 필요한 경우 유용
     public static String toUtcString(LocalDateTime utcLocalDateTime) {
-        if(utcLocalDateTime == null) return null;
+        if (utcLocalDateTime == null) return null;
         // UTC 로 해석한 후, Offset 을 명시(+00:00) 하여 문자열 생성
         OffsetDateTime odt = utcLocalDateTime.atOffset(ZoneOffset.UTC);
         return ISO_UTC.format(odt);
@@ -40,7 +40,7 @@ public class DateUtils {
     // 입력받을때 KST 로 받아서 서버 저장용  UTC 로 변환해야함
     // 보여줄때는 UTC 에서 KST 로 변환하여 응답. (사용자 화면용)
     public static LocalDateTime kstToUtc(LocalDateTime kstDateTime) {
-        if(kstDateTime == null) return null;
+        if (kstDateTime == null) return null;
         return kstDateTime.atZone(ZONE_KST)
                 .withZoneSameInstant(ZoneOffset.UTC)
                 .toLocalDateTime();

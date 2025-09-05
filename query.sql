@@ -350,6 +350,7 @@ SELECT * FROM orders;
 SELECT * FROM stocks;
 SELECT * FROM order_items;
 SELECT * FROM order_logs;
+SELECT * FROM users;
 
 
 
