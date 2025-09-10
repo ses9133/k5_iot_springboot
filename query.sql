@@ -107,7 +107,10 @@ SELECT * FROM boards;
 
 -- 08/27 (G_User_role)
 -- 사용자 권한 테이블
+#### 사용하지 않음 #####
+# : 아래의 사용자-권한 다대다 형식 사용 권장
 SELECT * FROM users;
+DROP TABLE IF EXISTS user_roles;
 CREATE TABLE IF NOT EXISTS user_roles (
 	user_id BIGINT NOT NULL,
     role VARCHAR(30) NOT NULL,
@@ -139,24 +142,53 @@ CREATE TABLE IF NOT EXISTS `users` (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '사용자';
-
--- 샘플 데이터
-INSERT INTO user_roles (user_id, role) 
-VALUES 
-	(1, 'ADMIN');
-INSERT INTO user_roles (user_id, role) 
-VALUES 
-	(2, 'USER');
+  
+-- 0910 (G_Role)
+-- 권한 코드 테이블
+CREATE TABLE IF NOT EXISTS `roles` (
+	role_name VARCHAR(30) PRIMARY KEY
+) ENGINE=InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '권한 코드(USER, MANAGER, OWNER 등)';
+  
+-- 0910 G_UserRoleId (role 과 user (다대다 관계) 를 연결하는 중간 테이블)
+-- 사용자-권한 매핑 (조인 엔티티)
+CREATE TABLE IF NOT EXISTS `user_roles` (
+	user_id BIGINT NOT NULL,
+    role_name VARCHAR(30) NOT NULL,
     
-INSERT INTO user_roles (user_id, role) 
+    PRIMARY KEY (user_id, role_name),
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES `users` (id),
+    CONSTRAINT fk_user_roles_role FOREIGN KEY (role_name) REFERENCES `roles` (role_name)
+) ENGINE=InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '사용자 권한 매핑';
+  
+## 권한 데이터 삽입 
+INSERT INTO roles (role_name) 
+VALUES
+	('USER'),
+    ('MANAGER'),
+    ('ADMIN')
+    # 이미 값이 있는 경우 (DUPLICATE, 즉 중복된 경우), 에러 대신 그대로 유지할 것을 설정
+    ON DUPLICATE KEY UPDATE role_name = VALUES(role_name);
+    
+## 사용자 권한 매핑 삽입
+INSERT INTO user_roles (user_id, role_name) 
 VALUES 
-	(6, 'ADMIN');
+	(1, 'USER'),
+    (2, 'MANAGER'),
+    (2, 'USER'),
+    (3, 'ADMIN'),
+    (3, 'MANAGER')
+    ON DUPLICATE KEY UPDATE role_name = VALUES(role_name);
+    
+SELECT * FROM roles;
     
 SELECT * FROM user_roles;
 SELECT * FROM users;
-INSERT INTO user_roles (user_id, role) 
-VALUES 
-	(4, 'ADMIN');
     
 -- 09/01 (주문 관리 시스템)
 -- 트랜잭션, 트리거, 인데긋, 뷰 학습
@@ -344,6 +376,8 @@ CREATE TRIGGER trg_after_order_status_update
 		END IF;
 END //
 DELIMITER ;order_summary
+
+-- 09/10
 
 SELECT * FROM products;
 SELECT * FROM orders;

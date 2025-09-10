@@ -36,11 +36,11 @@ public class UserPrincipalMapper {
 //                = List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
         Collection<? extends GrantedAuthority> authorities =
-                (user.getRoles() == null || user.getRoles().isEmpty())
+                (user.getUserRoles() == null || user.getUserRoles().isEmpty())
                 ? List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                : user.getRoles().stream()
+                : user.getUserRoles().stream()
                         .map(r -> {
-                            String name = r.name();
+                            String name = r.getRole().toString();
                             String role = name.startsWith("ROLE_") ? name : "ROLE_" + name;
                             return new SimpleGrantedAuthority(role);
                         })
