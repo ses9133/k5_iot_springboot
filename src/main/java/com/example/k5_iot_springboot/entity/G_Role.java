@@ -22,6 +22,4 @@ public class G_Role {
     @Column(name = "role_name", length = 30, nullable = false)
     private RoleType name;
 
-
-
 }
