@@ -79,7 +79,7 @@ public class G_User extends BaseTimeEntity {
 
     // 사용자로부터 받아와야하는 값
     @Builder
-    private G_User (String loginId, String password, String email, String nickname, Gender gender, Set<RoleType> roles) {
+    private G_User (String loginId, String password, String email, String nickname, Gender gender) {
         this.loginId = loginId;
         this.password = password;
         this.email = email;

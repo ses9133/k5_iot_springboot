@@ -23,3 +23,26 @@ spring.jpa.hibernate.ddl-auto=update
 # spring.jpa.hibernate.ddl-auto=validate --> missing column [test_id] in table [test] / validate 설정하면 너무 많은 오류가 남..
 
 # spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver -> spring 2.0 이상부터는 생략 가능, DBMS 가 2개이상 혼합되는 경우는 필수 명시
+
+# ==== Spring Web Email ====
+# Spring Boot에서 이메일을 보내기 위해 사용하는 SMTP 설정
+# Gmail의 SMTP 서버(smtp.gmail.com)를 사용해서 이메일을 보내도록 Spring Boot 애플리케이션을 구성
+
+# spring.mail.host=smtp.gmail.com
+# Gmail의 SMTP 서버 호스트 주소, 이메일을 보낼 때 이 서버를 사용
+
+# spring.mail.port=587
+# spring.mail.username=ses9133@gmail.com
+# spring.mail.password=${MAIL_PASSWORD}
+
+# spring.mail.properties.mail.smtp.auth=true
+# SMTP 서버 인증을 사용한다는 설정
+# Gmail은 인증이 필수이기 때문에 true로 설정
+
+# spring.mail.properties.mail.smtp.starttls.enable=true
+# STARTTLS를 활성화, 이 설정은 암호화된 연결을 위해 필요
+
+# 아래 설정들은 네트워크 지연이나 서버 응답이 없을 때 애플리케이션이 멈추지 않도록 도와줍
+# spring.mail.properties.mail.smtp.connectiontimeout=5000
+# spring.mail.properties.mail.smtp.timeout=5000
+# spring.mail.properties.mail.smtp.writetimeout=5000

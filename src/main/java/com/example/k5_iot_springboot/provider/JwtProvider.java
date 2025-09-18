@@ -58,6 +58,7 @@ public class JwtProvider {
     // 환경변수에 지정한 비밀키와 만료 시간 저장 변수 선언
     private final SecretKey key;
     private final long jwtExpirationMs;
+    private final long jwtEmailExpirationMs;
     private final int clockSkewSeconds;
 
     // 검증/파싱 담당 파서: 파서를 생성자에서 1회 구성하여 재사용 - 성능/일관성 보장(JJWT의 파서 객체)
@@ -70,6 +71,7 @@ public class JwtProvider {
             //          >> 데이터 타입 자동 인식
             @Value("${jwt.secret}") String secret, // cf) Base64 인코딩된 비밀키 문자열이어야함
             @Value("${jwt.expiration}") long jwtExpirationMs,    //
+            @Value("${jwt.email-expiration}") long jwtEmailExpirationMs,
             @Value("${jwt.clock-skew-seconds:0}")  int clockSkewSeconds  // 기본 0 - 옵션
     ) {
        // 키 강도 검증(Base64 로 디코딩후 256 비트 이상 권장)
@@ -83,6 +85,7 @@ public class JwtProvider {
         // HMAC-SHA 알고리즘으로 암호화된 키 생성
         this.key = Keys.hmacShaKeyFor(secretBytes); // HMAC-SHA 용 SecretKey 객체 생성
         this.jwtExpirationMs = jwtExpirationMs;
+        this.jwtEmailExpirationMs = jwtEmailExpirationMs;
         this.clockSkewSeconds = Math.max(clockSkewSeconds, 0); // 음수 방지
 
         this.parser = Jwts.parser()
@@ -120,6 +123,18 @@ public class JwtProvider {
                 .signWith(key) // 서명 키로 서명(자동 HS256 선택) - 비밀키를 서명
                 // key -> 시그니처에 저장
                 .compact(); // 빌더를 압축하여 최종 JWT 문자열 생성
+    }
+
+    /** */
+    public String generateEmailJwtToken(String email) {
+
+        return Jwts.builder()
+                .claim("email", email)
+               // .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtEmailExpirationMs))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     /**
@@ -222,9 +237,16 @@ public class JwtProvider {
         return Set.of(raw.toString());
     }
 
+    public String getEmailFromJwt(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("email", String.class); // email 이라는 claim 이 있으면 String 으로 반환한다
+    }
+
     /** 남은 만료 시간(ms)이 음수면 이미 만료*/
     public long getRemainingMillis(String tokenWithoutBearer) {
         Claims c = parseClaimsInternal(tokenWithoutBearer, true);
         return c.getExpiration().getTime() - System.currentTimeMillis();
     }
+
+
 }
