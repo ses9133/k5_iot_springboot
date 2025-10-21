@@ -386,6 +386,14 @@ SELECT * FROM order_items;
 SELECT * FROM order_logs;
 SELECT * FROM users;
 
+-- 10/21
+create table notice (
+	id bigint auto_increment primary key,
+    title varchar(255) not null,
+    content TEXT not null,
+    author varchar(100) not null,
+    created_at datetime default current_timestamp
+);
 
 
 

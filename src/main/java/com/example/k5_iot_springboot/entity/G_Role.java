@@ -1,11 +1,11 @@
 package com.example.k5_iot_springboot.entity;
 
 import com.example.k5_iot_springboot.common.enums.RoleType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
 
 /**
  * ==== 권한 코드 엔티티 (roles ) ===
@@ -22,4 +22,12 @@ public class G_Role {
     @Column(name = "role_name", length = 30, nullable = false)
     private RoleType name;
 
+//    public String toString() {
+//        return "ROLE_" + this.name;
+//    }
+//
+//    @Override
+//    public String getAuthority() {
+//        return name.toString();
+//    }
 }
