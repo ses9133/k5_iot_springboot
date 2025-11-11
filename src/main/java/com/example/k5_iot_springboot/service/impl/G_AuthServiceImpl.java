@@ -13,8 +13,10 @@ import com.example.k5_iot_springboot.provider.JwtProvider;
 import com.example.k5_iot_springboot.repository.G_RoleRepository;
 import com.example.k5_iot_springboot.repository.G_UserRepository;
 import com.example.k5_iot_springboot.repository.RefreshTokenRepository;
+import com.example.k5_iot_springboot.security.UserPrincipal;
 import com.example.k5_iot_springboot.service.G_AuthService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -83,6 +86,7 @@ public class G_AuthServiceImpl implements G_AuthService {
      * - Refresh Token: DB + 쿠키 저장
      * */
     @Override
+    @Transactional
     public ResponseDto<SignInResponse> sighIn(SignInRequest req, HttpServletResponse response) {
 
         // 스프링 시큐리티 표준 인증 흐름(UserDetailsService + PasswordEncoder)
@@ -109,6 +113,7 @@ public class G_AuthServiceImpl implements G_AuthService {
         // +) Refresh Token 저장 (기존의 토큰 삭제 후 신규 저장)
         long expiry = System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L; // 7일뒤 만료
         refreshTokenRepository.deleteByUsername(req.loginId());
+        refreshTokenRepository.flush();
         refreshTokenRepository.save(
                 RefreshToken.builder()
                         .username(req.loginId())
@@ -142,6 +147,39 @@ public class G_AuthServiceImpl implements G_AuthService {
     }
 
     @Override
+    public String refreshAccessToken(String refreshToken) {
+        try {
+            // 1) JWT 형식 및 서명 유효성 검증
+            if(!jwtProvider.isValidToken(refreshToken)) {
+                throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token 입니다.");
+            }
+            // 2) Refresh Token 의 subject(=username) 추출
+            String username = jwtProvider.getUsernameFromJwt(refreshToken);
+
+            // 3) DB 에 저장된 Refresh Token 과 일치하는지 확인
+            Optional<RefreshToken> savedToken = refreshTokenRepository.findByUsername(username);
+            if(savedToken.isEmpty() || !savedToken.get().getToken().equals(refreshToken)) {
+                throw new IllegalArgumentException("Refresh Token이 서버에 등록된 것과 일치하지 않습니다.");
+            }
+
+            // 4) 새로운 AccessToken 발급
+            Set<String> roles = jwtProvider.getRolesFromJwt(refreshToken);
+            String newAccessToken = jwtProvider.generateJwtToken(username, roles);
+
+            return newAccessToken;
+
+        } catch (ExpiredJwtException e) {
+            throw new IllegalArgumentException("Refresh 토큰이 만료되었습니다. 다시 로그인 해주세요");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteRefreshToken(UserPrincipal userPrincipal) {
+        refreshTokenRepository.deleteByUsername(userPrincipal.getUsername());
+    }
+
+    @Override
     @Transactional
     public void resetPassword(MailRequest.@Valid PasswordReset req) {
         if(!req.newPassword().equals(req.confirmPassword())) throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
@@ -154,4 +192,6 @@ public class G_AuthServiceImpl implements G_AuthService {
       user.changePassword(encoded);
       userRepository.save(user);
     }
+
+
 }

@@ -5,13 +5,20 @@ import com.example.k5_iot_springboot.dto.G_Auth.request.SignUpRequest;
 import com.example.k5_iot_springboot.dto.G_Auth.response.SignInResponse;
 import com.example.k5_iot_springboot.dto.J_Mail.MailRequest;
 import com.example.k5_iot_springboot.dto.ResponseDto;
+import com.example.k5_iot_springboot.security.UserPrincipal;
 import com.example.k5_iot_springboot.service.G_AuthService;
 import com.example.k5_iot_springboot.service.J_MailService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth") // WebSecurityConfig > /api/v1/auth/** -> 토큰없이 처리 가능
@@ -36,8 +43,19 @@ public class G_AuthController {
     }
 
     /** 로그아웃 (RefreshToken 쿠키 삭제) */
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    @PostMapping("/sign-out")
+    public ResponseEntity<?> logout(HttpServletResponse response, @AuthenticationPrincipal UserPrincipal userPrincipal) throws IOException {
+        // 인증 정보 확인
+        if(userPrincipal == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("""
+                    {"success": false, "message": "로그인 정보가 없습니다."}
+                    """);
+            return ResponseEntity.status(401).body(null);
+        }
+        authService.deleteRefreshToken(userPrincipal);
+
         // 쿠키 즉시 만료 처리 (서비스로 넘길 필요 X)
         // jakarta.servlet.http.Cookie
         // : 웹 서버가 웹 브라우저에 저장하도록 보내는 정보 조각
@@ -50,8 +68,51 @@ public class G_AuthController {
         cookie.setPath("/"); // 쿠키의 적용 범위를 특정 경로로 제한
         cookie.setMaxAge(0); // 쿠키 유효 시간 설정 - 0: 즉시 삭제
         response.addCookie(cookie);
+
         return ResponseEntity.ok(ResponseDto.setSuccess("로그아웃 성공", null));
     }
+
+    /** refresh Token 검증 및 Access Token 재발급 */
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request) {
+        try {
+            // 1) 클라이언트 요청 쿠키에서 RefreshToken 추출
+            String refreshToken = extractRefreshTokenFromCookie(request);
+            if(refreshToken == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                   "success", false,
+                   "message", "Refresh Token 이 존재하지 않습니다."
+                ));
+            }
+
+            // 2) Refresh Token 검증 후 새로운 Access Token 발급
+            String newAccessToken = authService.refreshAccessToken(refreshToken);
+
+            // 3) JSON 형식으로 응답 반환
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", Map.of("accessToken", newAccessToken)
+            ));
+        } catch (Exception e) {
+            // 검증 실패 - 401 응답반환
+            return ResponseEntity.status(401).body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    // private helper 메서드: 요청 쿠키에서 RefreshToken 쿠키를 찾아 반환
+    private String extractRefreshTokenFromCookie(HttpServletRequest request) {
+        if(request.getCookies() == null) return null;
+        for(Cookie cookie : request.getCookies()) {
+            if("refreshToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+            return null;
+    }
+
 
     /** 이메일 전송 */
     @PostMapping("/send-email")
