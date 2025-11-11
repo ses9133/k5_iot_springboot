@@ -100,7 +100,7 @@ public class WebSecurityConfig {
         List<String> origins = splitToList(allowedOrigins);
 
         config.setAllowCredentials(true);                       // 1) 인증 정보 (쿠키/자격 증명 헤더) 허용
-        // config.setAllowedOriginPatterns(origins);               // 2) Origin 설정 - 도메인 매칭 (* 처리되어있으면 allowed 못씀, 반드시 구체적인 도메인이어야함)
+        config.setAllowedOriginPatterns(origins);               // 2) Origin 설정 - 도메인 매칭 (* 처리되어있으면 allowed 못씀, 반드시 구체적인 도메인이어야함)
         config.setAllowedHeaders(splitToList(allowedHeaders));  // 3) 요청 헤더 화이트 리스트 검증
         config.setAllowedMethods(splitToList(allowedMethods));  // 4) 허용 메서드
         config.setExposedHeaders(splitToList(exposedHeaders));  // 5) 응답에서 클라이언트가 읽을 수 있는 헤더

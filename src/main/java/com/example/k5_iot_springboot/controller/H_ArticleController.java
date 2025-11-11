@@ -5,6 +5,7 @@ import com.example.k5_iot_springboot.dto.H_Article.request.ArticleUpdateRequest;
 import com.example.k5_iot_springboot.dto.H_Article.response.ArticleDetailResponse;
 import com.example.k5_iot_springboot.dto.H_Article.response.ArticleListResponse;
 import com.example.k5_iot_springboot.dto.ResponseDto;
+import com.example.k5_iot_springboot.repository.H_ArticleRepository;
 import com.example.k5_iot_springboot.security.UserPrincipal;
 import com.example.k5_iot_springboot.service.H_ArticleService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class H_ArticleController {
     private final H_ArticleService articleService;
+    private final H_ArticleRepository h_ArticleRepository;
 
     // 인증된 사용자만 생성가능
     @PostMapping
@@ -36,6 +38,12 @@ public class H_ArticleController {
     public ResponseEntity<ResponseDto<List<ArticleListResponse>>> getAllArticles() {
         ResponseDto<List<ArticleListResponse>> response = articleService.getAllArticles();
         return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/test-db")
+    public String testDb() {
+        long count = h_ArticleRepository.count();
+        return "현재 DB에서 조회된 Article 개수: " + count;
     }
 
     // 조회(단건)

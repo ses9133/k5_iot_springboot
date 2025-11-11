@@ -394,7 +394,7 @@ create table notice (
     author varchar(100) not null,
     created_at datetime default current_timestamp
 );
-
+drop table notice;
 
 
 

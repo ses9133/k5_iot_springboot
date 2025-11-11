@@ -8,11 +8,15 @@ import com.example.k5_iot_springboot.dto.J_Mail.MailRequest;
 import com.example.k5_iot_springboot.dto.ResponseDto;
 import com.example.k5_iot_springboot.entity.G_Role;
 import com.example.k5_iot_springboot.entity.G_User;
+import com.example.k5_iot_springboot.entity.RefreshToken;
 import com.example.k5_iot_springboot.provider.JwtProvider;
 import com.example.k5_iot_springboot.repository.G_RoleRepository;
 import com.example.k5_iot_springboot.repository.G_UserRepository;
+import com.example.k5_iot_springboot.repository.RefreshTokenRepository;
 import com.example.k5_iot_springboot.service.G_AuthService;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,6 +40,7 @@ public class G_AuthServiceImpl implements G_AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final G_RoleRepository roleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     @Transactional
@@ -72,8 +77,13 @@ public class G_AuthServiceImpl implements G_AuthService {
 
     }
 
+    /**
+     * 로그인
+     * - 인증 성공시 Access/Refresh Token 발급
+     * - Refresh Token: DB + 쿠키 저장
+     * */
     @Override
-    public ResponseDto<SignInResponse> sighIn(SignInRequest req) {
+    public ResponseDto<SignInResponse> sighIn(SignInRequest req, HttpServletResponse response) {
 
         // 스프링 시큐리티 표준 인증 흐름(UserDetailsService + PasswordEncoder)
         Authentication auth = authenticationManager.authenticate(
@@ -90,16 +100,37 @@ public class G_AuthServiceImpl implements G_AuthService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        // 3) JWT 발급 (username=loginId, roles 포함)
+        // JWT 토큰 발급
+        // 3) Access Token 발급 (username=loginId, roles 포함)
+        //      +) Refresh Token 생성
         String accessToken = jwtProvider.generateJwtToken(req.loginId(), roles);
-        // accessToken: 발급된 토큰
+        String refreshToken = jwtProvider.generateRefreshToken(req.loginId(), roles);
+
+        // +) Refresh Token 저장 (기존의 토큰 삭제 후 신규 저장)
+        long expiry = System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L; // 7일뒤 만료
+        refreshTokenRepository.deleteByUsername(req.loginId());
+        refreshTokenRepository.save(
+                RefreshToken.builder()
+                        .username(req.loginId())
+                        .token(refreshToken)
+                        .expiry(expiry)
+                        .build()
+        );
+
+        // +) Refresh Token 쿠키 설정
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+       // cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int)(7 * 24 * 60 * 60));
+        response.addCookie(cookie);
 
         // 4) 만료시각 추출하여 응답에 포함시키기
         Claims claims = jwtProvider.getClaims(accessToken);
         long expiresAt = claims.getExpiration().getTime();
 
         // 5) 응답 DTO 구성
-        SignInResponse response = new SignInResponse(
+        SignInResponse result = new SignInResponse(
                 "Bearer",
                 accessToken,
                 expiresAt,
@@ -107,7 +138,7 @@ public class G_AuthServiceImpl implements G_AuthService {
                 roles
         );
 
-        return ResponseDto.setSuccess("로그인 성공", response);
+        return ResponseDto.setSuccess("로그인 성공", result);
     }
 
     @Override
