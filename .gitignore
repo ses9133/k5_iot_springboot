@@ -38,3 +38,4 @@ out/
 
 ### secret properties ###
 application-secret.properites
+query2.sql

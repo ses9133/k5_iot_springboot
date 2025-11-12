@@ -27,7 +27,7 @@ public class I_StockServiceImpl implements I_StockService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseDto<StockResponse.Response> adjust(UserPrincipal userPrincipal, StockRequest.@Valid StockAdjust req) {
-       // 재고 증감 (by delta)
+       // 재고 증감 (by delta)+
         // : delta > 0 - 입고/반품
         //         < 0 - 출고/차감
         StockResponse.Response data = null;
